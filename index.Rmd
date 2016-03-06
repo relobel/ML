@@ -8,6 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ```{r message=FALSE}
+#setwd("K:/Pastas em Comum/Coursera/Machine Learning/assignment")
 library(caret); library(rpart); library(rattle); library(randomForest); library(dplyr)
 ```
 
@@ -45,7 +46,7 @@ I decided to start using "Decision trees" which is a popular method for various 
 From Wikipedia, comparing the two methods we have that "trees that are grown very deep tend to learn highly irregular patterns: they overfit their training sets, because they have low bias, but very high variance. Random forests are a way of averaging multiple deep decision trees, trained on different parts of the same training set, with the goal of reducing the variance. This comes at the expense of a small increase in the bias and some loss of interpretability, but generally greatly boosts the performance of the final model."
 
 ###Splitting the Data
-When fitting a model, we capture the signal and noise. The objective is to capture as much as possible the signal and avoid the noise. It is always possible to design a perfect in-sample predictor, but this approach will include both signal and noise, overfitting the model. Overfitted models won?t perform as well on new samples.
+When fitting a model, we capture the signal and noise. The objective is to capture as much as possible the signal and avoid the noise. It is always possible to design a perfect in-sample predictor, but this approach will include both signal and noise, overfitting the model. Overfitted models won´t perform as well on new samples.
 
 This why it is so important to do a cross validation of the model using out of the sample data. Only predicting the outcome with this out of sample data will make possible to check the expected out of sample error and have a better visibility of the model accuracy.
 
@@ -56,11 +57,17 @@ train_main = training[subtrain,]
 train_chk = training[-subtrain,]
 ```
 ##Building the Models
+### Cross validation
+```{r}
+# Using cross-validation with k=10
+control<-trainControl(method="cv",number=10)
+```
+
 ###Building a Decision Tree model with RPART method
 ```{r}
 # Build a RPART model, by training the predictors in train_main
 set.seed(1103) 
-model_rpart = train(classe~.,data=train_main, method="rpart")
+model_rpart = train(classe~.,data=train_main, method="rpart", trControl=control)
 fancyRpartPlot(model_rpart$finalModel)
 
 # The count of Classe == D Outcome factor in the training dataset
@@ -81,7 +88,8 @@ confusionMatrix(pred_rpart,train_chk$classe)$overall['Accuracy']
 ###Building a Random Forest model
 ```{r}
 set.seed(1103) #seed used for reproducibility
-model_rf = randomForest(classe~.,data=train_main,ntree=100, importance=TRUE)
+# using cross-validation with k=10
+model_rf = randomForest(classe~.,data=train_main,ntree=100, importance=TRUE, trControl=control)
 ```
 ### Cross validation & out of sample error for the Random Forest method
 ```{r}
